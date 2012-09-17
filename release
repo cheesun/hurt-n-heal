@@ -1,5 +1,0 @@
-#cd gae && ./update.sh
-
-/home/cheesun/Programming/GAE/google_appengine/appcfg.py update gae
-date
-
