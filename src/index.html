@@ -175,7 +175,7 @@
         </script>        
 
 
-    {% for value in interesting.values %}
+    {% for value in interesting %}
         <div style='border-top: 1px solid #E9E9E9; margin-bottom: 1em; padding-top: 1em; padding-left: 1em'>
             <table>
                 <tr>
@@ -207,6 +207,7 @@
         </div>
     {% endfor %}
 
+    {% comment %}
         <h2>Debug</h2>
         <ul>
         {% for key,value in user.items %}
@@ -218,6 +219,7 @@
             <li>{{value.person.nickname}}: {{value.test}}</li>
         {% endfor %}
         </ol>
+    {% endcomment %}
     </body>
 </html>
 
