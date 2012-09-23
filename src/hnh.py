@@ -25,7 +25,7 @@ class Thespian(object):
         cache_key = 'AttributeType.all()'
         all_attr_types = instance_cache.get(cache_key)
         if not all_attr_types:
-            all_attr_types = AttributeType.all().fetch()
+            all_attr_types = AttributeType.all().fetch(1000)
             instance_cache.set(cache_key,all_attr_types)
         for attribute_type in all_attr_types:
             self.attribute_types[attribute_type.name] = attribute_type
