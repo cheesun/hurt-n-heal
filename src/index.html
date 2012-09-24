@@ -167,7 +167,13 @@
                     if ($("#action-narration").val() == "") {
                         alert('please enter a narration!');
                         return false;
-                    }                    
+                    } else {
+                        var friendSelector  = $("#jfmfs-container").data('jfmfs');
+                        var selectedFriend = friendSelector.getSelectedIdsAndNames()[0];
+                        $("#target_id_hidden").val(selectedFriend.id);
+                        $("#target_username_hidden").val(selectedFriend.name);
+                        return true;
+                    }
                 }
             );
         </script>

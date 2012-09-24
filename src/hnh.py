@@ -118,7 +118,7 @@ class Thespian(object):
                 attr.latest_date = ref_time
             current_value = self.fast_forward(attr,ref_time)['value']
             new_value = current_value + delta
-            if attr_type in self.restricted and new_value < attr_type.min_value or new_value > attr_type.max_value:
+            if attr_type in self.restricted and (new_value < attr_type.min_value or new_value > attr_type.max_value):
                 raise Alert('%s has insufficient %s' % (self.player.nickname,name))
             new_value = min(max(new_value,attr_type.min_value),attr_type.max_value)
             attr.latest_value = new_value
