@@ -9,7 +9,7 @@ import logging
 import random
 
 # hurt'n'heal specific imports
-from models import Player, Action
+from models import Player, Action, AttributeType
 from hnh import act, Alert, get_current_info
 
 from facebook import *
@@ -17,7 +17,7 @@ from facebook import *
 
 class MainHandler(webapp2.RequestHandler):
     def get(self):
-        self.response.out.write(template.render('index.html',{}))
+        return self.post()
 
     def post(self):
         sig, payload = self.request.get('signed_request').split('.',1)
@@ -45,7 +45,7 @@ class MainHandler(webapp2.RequestHandler):
                                               self.request.get('target_id'),
                                               self.request.get('target_username'))
                 act(player,target,action,self.request.get('narration'))
-                player = Player.get_by_key_name('facebook|%s' % graph['id']) # TODO: figure out why I have this step and comment it
+                player = Player.get_by_key_name('facebook|%s' % graph['id']) # TODO: figure out why I have this step and comment on it
             except Alert, a:
                 logging.warning(a)           
                 
@@ -61,8 +61,7 @@ class MainHandler(webapp2.RequestHandler):
                 player_info.append({
                     'action': action, 
                     'status': get_current_info(action.target,reftime),
-                    'person': action.target,
-                    'test': 'acted',})
+                    'person': action.target,})
         left_over = 10 - len(player_info)
         friends_to_display = random.sample(get_facebook_friends(sr['oauth_token']),left_over)
         friend_players = [Player.get_or_create('facebook',f['id'],f['name']) for f in friends_to_display]        
@@ -75,7 +74,6 @@ class MainHandler(webapp2.RequestHandler):
                 'action': None,
                 'status': get_current_info(p,reftime),
                 'person': p,
-                'test': 'random',
                 })
             
         status = get_current_info(player,reftime)
@@ -86,17 +84,32 @@ class MainHandler(webapp2.RequestHandler):
             'status'        : status,
             'action'        : status['last_action'],
             'recent'        : recent_actions,
-            'interesting'   : player_info,
+            'interesting'   : [{'person':player,'action':status['last_action'],'status':status}]+player_info,
             }))
 
+
+class CurrentStatusHandler(webapp2.RequestHandler):
+    def get(self):
+        return post(self)
+       
+    def get(self,network,id):
+       
+        target = Player.get_by_key_name(Player.make_key(network,id))
+        refdate = self.request.get('refdate',None)
+        self.response.out.write(template.render('status.html',{
+            'status' : get_current_info(target,refdate),
+            'person' : target,
+            'action' : None,        
+            }))
 
 class UpdateHandler(webapp2.RequestHandler):
     """ utility handler to do updates required by schema changes
     """
     def get(self):
-        ats = AttributeType.all().fetch()
+        ats = AttributeType.all().fetch(1000)
         for at in ats:
-            at.recovery_rate=1.0
+            at.recovery="1.0"
+            at.decay="2.0"
             at.put()
 
 class InitHandler(webapp2.RequestHandler):
@@ -106,17 +119,18 @@ class InitHandler(webapp2.RequestHandler):
         AttributeType.create('health',
                              color='#beb',
                              order=0.0,
-                             recovery="1.0",
-                             decay="10.0",
+                             recovery="0.1",
+                             decay="1.0",
                              description='the state of your health. 0 means death!')
         AttributeType.create('energy',
                              color='#bbe',
                              order=1.0,
-                             recovery="2.5",
-                             decay="5.0",
+                             recovery="0.5",
+                             decay="1.0",
                              description='most actions require energy to perform')
 
 app = webapp2.WSGIApplication([('/', MainHandler),
                                ('/init', InitHandler),
                                ('/update', UpdateHandler),
+                               ('/api/status/(.*)/(.*)', CurrentStatusHandler),
                                ],debug=True)

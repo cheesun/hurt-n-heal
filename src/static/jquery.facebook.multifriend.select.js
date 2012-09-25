@@ -27,31 +27,31 @@
         var settings = $.extend({
             max_selected: -1,
             max_selected_message: "{0} of {1} selected",
-			pre_selected_friends: [],
-			exclude_friends: [],
-			friend_fields: "id,name",
-			sorter: function(a, b) {
+            pre_selected_friends: [],
+            exclude_friends: [],
+            friend_fields: "id,name",
+            sorter: function(a, b) {
                 var x = a.name.toLowerCase();
                 var y = b.name.toLowerCase();
                 return ((x < y) ? -1 : ((x > y) ? 1 : 0));
             },
-			labels: {
-				selected: "Selected",
-				filter_default: "Start typing a name",
-				filter_title: "Find Friends:",
-				all: "All",
-				max_selected_message: "{0} of {1} selected"
-			}
+            labels: {
+                selected: "Selected",
+                filter_default: "Start typing a name",
+                filter_title: "Find Friends:",
+                all: "All",
+                max_selected_message: "{0} of {1} selected"
+            }
         }, options || {});
         var lastSelected;  // used when shift-click is performed to know where to start from to select multiple elements
                 
         var arrayToObjectGraph = function(a) {
-			  var o = {};
-			  for(var i=0, l=a.length; i<l; i++){
-			    o[a[i]]='';
-			  }
-			  return o;
-		};
+              var o = {};
+              for(var i=0, l=a.length; i<l; i++){
+                o[a[i]]='';
+              }
+              return o;
+        };
 
         // ----------+----------+----------+----------+----------+----------+----------+
         // Initialization of container
@@ -60,9 +60,9 @@
             "<div id='jfmfs-friend-selector'>" +
             "    <div id='jfmfs-inner-header'>" +
             "        <span class='jfmfs-title'>" + settings.labels.filter_title + " </span><input type='text' id='jfmfs-friend-filter-text' value='" + settings.labels.filter_default + "'/>" +
-            "        <a class='filter-link selected' id='jfmfs-filter-all' href='#'>" + settings.labels.all + "</a>" +
-            "        <a class='filter-link' id='jfmfs-filter-selected' href='#'>" + settings.labels.selected + " (<span id='jfmfs-selected-count'>0</span>)</a>" +
-            ((settings.max_selected > 0) ? "<div id='jfmfs-max-selected-wrapper'></div>" : "") +
+            "        <div><a class='filter-link selected' id='jfmfs-filter-all' href='#'>" + settings.labels.all + "</a>" +
+            "        <a class='filter-link' id='jfmfs-filter-selected' href='#'>" + settings.labels.selected + " (<span id='jfmfs-selected-count'>0</span>)</a></div>" +
+            //((settings.max_selected > 0) ? "<div id='jfmfs-max-selected-wrapper'></div>" : "") +
             "    </div>" +
             "    <div id='jfmfs-friend-container'></div>" +
             "</div>" 
@@ -70,8 +70,8 @@
         
         var friend_container = $("#jfmfs-friend-container"),
             container = $("#jfmfs-friend-selector"),
-			preselected_friends_graph = arrayToObjectGraph(settings.pre_selected_friends),
-			excluded_friends_graph = arrayToObjectGraph(settings.exclude_friends),
+            preselected_friends_graph = arrayToObjectGraph(settings.pre_selected_friends),
+            excluded_friends_graph = arrayToObjectGraph(settings.exclude_friends),
             all_friends;
 
 
@@ -119,13 +119,13 @@
             var sortedFriendData = response.data.sort(settings.sorter),
                 preselectedFriends = {},
                 buffer = [],
-			    selectedClass = "";
+                selectedClass = "";
             
             $.each(sortedFriendData, function(i, friend) {
-				if(! (friend.id in excluded_friends_graph)) {
-					selectedClass = (friend.id in preselected_friends_graph) ? "selected" : "";
-	                buffer.push("<div class='jfmfs-friend " + selectedClass + " ' id='" + friend.id  +"'><img/><div class='friend-name'>" + friend.name + "</div></div>");            
-				}
+                if(! (friend.id in excluded_friends_graph)) {
+                    selectedClass = (friend.id in preselected_friends_graph) ? "selected" : "";
+                    buffer.push("<div class='jfmfs-friend " + selectedClass + " ' id='" + friend.id  +"'><img/><div class='friend-name'>" + friend.name + "</div></div>");            
+                }
             });
             friend_container.append(buffer.join(""));
             
@@ -241,7 +241,7 @@
 
             // filter by selected, hide all non-selected
             $("#jfmfs-filter-selected").click(function(event) {
-				event.preventDefault();
+                event.preventDefault();
                 all_friends.not(".selected").addClass("hide-non-selected");
                 $(".filter-link").removeClass("selected");
                 $(this).addClass("selected");
@@ -249,7 +249,7 @@
 
             // remove filter, show all
             $("#jfmfs-filter-all").click(function(event) {
-				event.preventDefault();
+                event.preventDefault();
                 all_friends.removeClass("hide-non-selected");
                 $(".filter-link").removeClass("selected");
                 $(this).addClass("selected");
@@ -327,7 +327,7 @@
                     if($el !== null) {
                         $el = $(allVisibleFriends[i]);
                         top_px = (first_element_offset_px + (friend_height_px * Math.ceil(elementVisitedCount/friends_per_row))) - scroll_top_px - container_offset_px; 
-						if (top_px + friend_height_px >= -10 && 
+                        if (top_px + friend_height_px >= -10 && 
                             top_px - friend_height_px < container_height_px) {  // give some extra padding for broser differences
                                 $el.data('inview', true);
                                 $el.trigger('inview', [ true ]);
@@ -342,15 +342,15 @@
                 });
             };
 
-			var updateSelectedCount = function() {
-				$("#jfmfs-selected-count").html( selectedCount() );
-			};
+            var updateSelectedCount = function() {
+                $("#jfmfs-selected-count").html( selectedCount() );
+            };
 
             friend_container.bind('scroll', $.debounce( 250, showImagesInViewPort ));
 
             updateMaxSelectedMessage();                      
             showImagesInViewPort();
-			updateSelectedCount();
+            updateSelectedCount();
             elem.trigger("jfmfs.friendload.finished");
         };
 

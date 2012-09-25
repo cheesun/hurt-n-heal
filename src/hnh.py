@@ -138,14 +138,20 @@ class Thespian(object):
         return ' '.join(output)
 
 
-            
+# TODO: concurrency
+# make this use a cross group (XG) transaction
+# also read the latest version of the player as part of the transaction so that noone else can modify
 def act(actor,target,action,narration):
+    acting_on_self = target.key().name() == actor.key().name()
     a = Thespian(actor)
-    t = Thespian(target)
+    if acting_on_self:
+        t = a
+    else:
+        t = Thespian(target)
     action_types[action].run_script(a,t)
     now = datetime.now()
     db.run_in_transaction(a.run_effects_at,now)
-    if target.key().name() != actor.key().name():
+    if not acting_on_self:
         db.run_in_transaction(t.run_effects_at,now)
     Action.create(actor,target,now,action,narration,a.effect_summary(),t.effect_summary())
     

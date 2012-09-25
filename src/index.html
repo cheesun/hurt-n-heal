@@ -19,14 +19,17 @@
         
     <script type="text/JavaScript" src="static/jquery.js"></script>
     <script type="text/JavaScript" src="static/jquery.facebook.multifriend.select.js"></script> 
+    <script type="text/JavaScript" src="static/hnh.js"></script>
     <style type="text/css">
         body { 
             font-family: 'lucida grande', tahoma, verdana, arial, sans-serif;
             margin: 0;
             border: 1px solid gray;
             overflow: hidden;
+            border-top: none;
+            font-size: 14px;
             margin-top: -2em;
-            padding-top: -2em;
+            padding-top: 2em;
         }
         
         body > * {
@@ -38,34 +41,101 @@
         }
         
         #new-action {
-            margin: 1em 1em 1em 0;
+            margin: 0.5em;
+            padding: 0.25em;    
+            float: right;
+            width: 50%;
+            background-color: white;
+            border: 2px solid gray;        
         }
         
         #action-form {
-            width: 100%;
-            border: 1px solid #BDC7D8; 
             background-color: white;
+            padding: 0.5em;
+        }
+        
+        #action-narration-container {
+            height: 5em;
+            padding: 0.25em;
+            border: 1px solid #BDC7D8;
+            margin-bottom: 1em;
         }
         
         #action-narration {
+            -webkit-box-sizing: border-box; /* Safari/Chrome, other WebKit */
+            -moz-box-sizing: border-box;    /* Firefox, other Gecko */
+            box-sizing: border-box;         /* Opera/IE 8+ */            
             border: none;
             resize: none;
             outline: 0;
             font-family: "lucida grande",tahoma,verdana,arial,sans-serif;
-            margin: 0;
-            padding: 0.25em;
             width: 100%;
-            height: 5em;
+            height: 100%;
+            font-size: 16px;
         }
         
         #action-selection {
             padding: 0.25em;
+            margin: 1em 0;
+            border: 1px solid #BDC7D8;
         }
         
         #jfmfs-container {
             border: 1px solid #BDC7D8; 
-            border-bottom: none;
-            width: 100%;
+        }
+        
+        #target-status {
+        }
+        
+        .action-intro {
+            color: gray; 
+            font-size: 11px
+        }
+        
+        .action-text {
+            font-style: italic;
+        }
+               
+               
+        .action-button {
+            font-weight: bold;
+            margin:4px 5px 4px 5px;
+            padding:3px 5px 3px 5px;
+            border: none;
+            background-color: white;
+            color: #551A8B;
+        }
+        
+        .action-button.enabled:hover {
+            background-color: #6D84B4;
+            -moz-border-radius: 5px; 
+            -webkit-border-radius: 5px;
+            color: #FFFFFF;
+        }
+        
+        .action-button[disabled=yes] {
+            color: lightgray;
+        }
+        
+        .action-button.selected {
+            background-color: #6D84B4;
+            -moz-border-radius: 5px; 
+            -webkit-border-radius: 5px;
+            color: #FFFFFF;
+        }
+
+        #action-form input[type=submit] {
+            font-weight: bold;
+            margin:4px 5px 4px 5px;
+            padding:3px 5px 3px 5px;
+            border: none;
+            background-color: white;
+            color: #551A8B;            
+            background-color: #6D84B4;
+            -moz-border-radius: 5px; 
+            -webkit-border-radius: 5px;
+            color: #FFFFFF;
+            font-size: 1.5em;
         }
 
      </style>
@@ -75,6 +145,12 @@
 
         <div id="fb-root"></div>
         <script>
+            function load_target(id,name) {
+                    $("#target-status").hnh_player(id);
+                    $("#target_id_hidden").val(id);
+                    $("#target_username_hidden").val(name);
+            }                        
+            
           window.fbAsyncInit = function() {
             FB.init({
               appId      : '462258703786082', // App ID
@@ -83,11 +159,49 @@
               cookie     : true, // enable cookies to allow the server to access the session
               xfbml      : true  // parse XFBML
             });
+            
             window.onload = function() {
                 FB.Canvas.setAutoGrow(100); //Run the timer every 100 milliseconds, you can increase this if you want to save CPU cycles
             }
             
-            $("#jfmfs-container").jfmfs({'max_selected':1});
+            load_target('{{player.userid}}','{{player.username}}');
+            
+            var fs = $("#jfmfs-container").jfmfs({'max_selected':1});
+            
+            // hook into the friend choser
+            fs.bind("jfmfs.selection.changed",
+                function () {
+                    var target  = fs.data('jfmfs').getSelectedIdsAndNames()[0];
+                    if (target) load_target(target.id,target.name);
+                    else load_target('{{player.userid}}','{{player.username}}');
+                }
+            );
+            
+            // form validation
+            $("#action-form").submit(
+                function () { 
+                    var succeeded = true;
+                    if ($("#action-narration").val() == "") {
+                        alert('please enter a narration!');
+                        succeeded = false;
+                    } else if ($("#chosen-action").val() == "") {
+                        alert('please choose an action!');
+                        succeeded = false;
+                    }                    
+                    return succeeded;
+                }
+            );          
+            
+            // set up the action choice buttons to fill in the chosen-action
+            $(".action-button").click(
+                function (event) {
+                    var current = $(event.delegateTarget);
+                    $("#chosen-action").val(current.val());
+                    $(".action-button").removeClass('selected');
+                    current.addClass('selected');
+                }
+            );
+            
             // Additional initialization code here
           };
 
@@ -103,81 +217,47 @@
         </script>   
         
         <h2>HURT 'n' HEAL</h2>
-        <div class='status'>
-            <table>
-                <tr>
-                    <td rowspan=2><img src="http://graph.facebook.com/{{player.userid}}/picture"></img></td><td><strong>{{player.nickname}}</strong></td>
-                </tr>
-                <tr>
-                    <td style='font-size:0.8em'>
-                    {% for item in status.attribute_state %}
-                        <div style='padding:1px;font-size:0.65em;margin:1px;display:inline-block;width:200px;border:1px solid grey' title='{{item.name}}: {{item.value|floatformat:"-1"}}/{{item.max_value|floatformat:"-1"}}'>
-                            <div style='width:{{item.percentage}}%;display:inline-block;background-color:{{item.color}}'>&nbsp;</div>
-                        </div> 
-                        {{item.name}}<br>
-                    {% endfor %}
-                    </td>
-                </tr>
-            </table>
-        </div>
-    {% if action %}
-        <div class='action'>
-            <span style='color: gray; font-size: 11px'>
-                {{action.gen_age}}, 
-                {% ifequal player.key.name action.actor.key.name %}you{% else %}{{action.actor.nickname}}{% endifequal %} 
-                {{action.past_tense}} 
-                {% ifequal player.key.name action.target.key.name %}yourself{% else %}{{action.target.nickname}}{% endifequal %}                     
-                ( {{action.target_effects}} )</em>
-            </span>
-            <br><em>{{action.narration}}</em>
-        </div>
-    {% endif %}        
 
         <div id="new-action">
-            <div>
-                <div id="jfmfs-container"></div>
-            </div>    
+
             <form id="action-form" method='POST'>
                 <input type='hidden' name='signed_request' value='{{signed_request}}'></input>
                 <input type='hidden' name='target_network' value='facebook'></input>
                 <input id='target_id_hidden' type='hidden' name='target_id' value='{{user.id}}'></input>
                 <input id='target_username_hidden' type='hidden' name='target_username' value='{{user.username}}'></input>
-                <div style='overflow:hidden'>
-                    <textarea id="action-narration" name='narration'></textarea>
-                </div>                
-                <div id="action-selection" style='background-color: #F2F2F2;border-top: 1px solid #E6E6E6;'>
-                    <div>
-                        <input type='submit' name='action' value='hurt'></input>
-                        <input type='submit' name='action' disabled='yes' value='devastate'></input>
-                        <input type='submit' name='action' disabled='yes' value='annihilate'></input>
-                    </div>
-                    <div>
-                        <input type='submit' name='action' value='heal'></input>
-                        <input type='submit' name='action' disabled='yes' value='restore'></input>
-                        <input type='submit' name='action' disabled='yes' value='resurrect'></input>
-                    </div>
-                    
-                </div>                
+                <input id='chosen-action' type='hidden' name='action' value=''></input>
+                <h3>Step 1: Choose your target</h3>
+                <div id="jfmfs-container"></div>
+                
+                <h3>Step 2: Choose your action</h3>
+                <div id="action-selection">
+                    <table>
+                        <tr>
+                            <td><input class='action-button enabled' type='button' value='hurt'></input></td>
+                            <td><input class='action-button' type='button' disabled='yes' value='devastate'></input></td>
+                            <td><input class='action-button' type='button' disabled='yes' value='annihilate'></input></td>
+                        </tr>
+                        <tr>
+                            <td><input class='action-button enabled' type='button' value='heal'></input></td>
+                            <td><input class='action-button' type='button' disabled='yes' value='restore'></input></td>
+                            <td><input class='action-button' type='button' disabled='yes' value='resurrect'></input></td>
+                        </tr>
+                    </table>
+                </div>
+
+                <h3>Step 3: Give a narration</h3>
+                <div id="target-status"></div>
+                <div class='action-intro'>enter a narration for your action:</div>
+                <div id="action-narration-container">
+                    <textarea id="action-narration" class='action-text' name='narration'></textarea>
+                </div>                    
+
+                <input type='submit' name='submit' value='go!'></input>
+        
             </form>
+            
         </div>
-        
-        <script>
-            $("#action-form").submit(
-                function () { 
-                    if ($("#action-narration").val() == "") {
-                        alert('please enter a narration!');
-                        return false;
-                    } else {
-                        var friendSelector  = $("#jfmfs-container").data('jfmfs');
-                        var selectedFriend = friendSelector.getSelectedIdsAndNames()[0];
-                        $("#target_id_hidden").val(selectedFriend.id);
-                        $("#target_username_hidden").val(selectedFriend.name);
-                        return true;
-                    }
-                }
-            );
-        </script>
-        
+
     {% for value in interesting %}
         <div style='border-top: 1px solid #E9E9E9; margin-bottom: 1em; padding-top: 1em; padding-left: 1em'>
             <table>
@@ -197,32 +277,18 @@
             </table>                  
         {% if value.action %}
             <div class='action'>
-                <span style='color: gray; font-size: 11px'>
+                <div class='action-intro'>
                     {{value.action.gen_age}}, 
                     {% ifequal player.key.name value.action.actor.key.name %}you{% else %}{{value.action.actor.nickname}}{% endifequal %} 
                     {{value.action.past_tense}} 
                     {% ifequal player.key.name value.action.target.key.name %}yourself{% else %}{{value.action.target.nickname}}{% endifequal %}                     
-                    ( {{value.action.target_effects}} )</em>
-                </span>
-                <br><em>{{value.action.narration}}</em>
+                    ( {{value.action.target_effects}} )
+                </div>
+                <div class='action-text'>{{value.action.narration}}</div>
             </div>       
         {% endif %}
         </div>
     {% endfor %}
-
-    {% comment %}
-        <h2>Debug</h2>
-        <ul>
-        {% for key,value in user.items %}
-            <li>{{key}}: {{value}}</li>
-        {% endfor %}
-        </ul>
-        <ol>
-        {% for key,value in interesting.items %}
-            <li>{{value.person.nickname}}: {{value.test}}</li>
-        {% endfor %}
-        </ol>
-    {% endcomment %}
     
     </body>
 </html>

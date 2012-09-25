@@ -1,0 +1,30 @@
+        <div>
+            <table>
+                <tr>
+                    <td colspan=2><strong>{{person.nickname}}</strong></td>
+                </tr>
+                <tr>
+                    <td><img src="http://graph.facebook.com/{{person.userid}}/picture"></img></td>
+                    <td style='font-size:0.8em'>           
+                    {% for item in status.attribute_state %}
+                        <div style='padding:1px;font-size:0.65em;margin:1px;display:inline-block;width:200px;border:1px solid grey' title='{{item.name}}: {{item.value|floatformat:"-1"}}/{{item.max_value|floatformat:"-1"}}'>
+                            <div style='width:{{item.percentage}}%;display:inline-block;background-color:{{item.color}}'>&nbsp;</div>
+                        </div>
+                        {{item.name}}<br>
+                    {% endfor %}      
+                    </td>
+                </tr>
+            </table>                  
+        {% if action %}
+            <div class='action'>
+                <span style='color: gray; font-size: 11px'>
+                    {{action.gen_age}}, 
+                    {% ifequal player.key.name action.actor.key.name %}you{% else %}{{action.actor.nickname}}{% endifequal %} 
+                    {{action.past_tense}} 
+                    {% ifequal player.key.name action.target.key.name %}yourself{% else %}{{action.target.nickname}}{% endifequal %}                     
+                    ( {{action.target_effects}} )</em>
+                </span>
+                <br><em>{{action.narration}}</em>
+            </div>       
+        {% endif %}
+        </div>

@@ -9,14 +9,19 @@ class Player(db.Model):
     network = db.StringProperty() # 'facebook','google+','twitter', etc
     userid = db.StringProperty() # network specific id - must be unique in the network
     nickname = db.StringProperty() # hnh specific name for user. defaults to either '<firstname> <lastname>' or '<username>'.
+    @staticmethod
+    def make_key(network,userid):
+        return '%s|%s' % (network,userid)
+    
     @classmethod
     def get_or_create(cls,network,userid,nickname):
-        key_name = '%s|%s' % (network,userid)
+        key_name = Player.make_key(network,userid)
         return cls.get_or_insert(key_name,
                                   network=network,
                                   userid=userid,
                                   nickname=nickname
                                   )
+
 
 
 class AttributeType(db.Model):
